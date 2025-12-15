@@ -7,7 +7,8 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        persona_id: process.env.TAVUS_PERSONA_ID
+        persona_id: process.env.TAVUS_PERSONA_ID,
+        conversation_name: "GRID Guide Demo"
       })
     });
 
