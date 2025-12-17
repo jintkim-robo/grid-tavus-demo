@@ -8,6 +8,7 @@ module.exports = async (req, res) => {
     const replicaId = process.env.TAVUS_REPLICA_ID;
     const personaId = process.env.TAVUS_PERSONA_ID;
 
+    // 環境変数のチェック
     if (!apiKey || !replicaId) {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -16,14 +17,15 @@ module.exports = async (req, res) => {
           error: 'Missing env vars',
           apiKey: !!apiKey,
           replicaId: !!replicaId,
-        }),
+        })
       );
     }
 
-    const response = await _fetch('https://api.tavus.io/v2/conversations', {
+    // Tavus API へ新しい会話のリクエスト
+    const response = await _fetch('https://tavusapi.com/v2/conversations', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -33,6 +35,7 @@ module.exports = async (req, res) => {
       }),
     });
 
+    // 応答の処理
     const text = await response.text();
     let data;
     try {
@@ -41,20 +44,21 @@ module.exports = async (req, res) => {
       data = { raw: text };
     }
 
+    // エラー応答処理
     if (!response.ok || !data?.conversation_url) {
       res.statusCode = response.status || 500;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       return res.end(JSON.stringify({ status: response.status, data }));
     }
 
+    // 会話URLへリダイレクト
     res.statusCode = 302;
     res.setHeader('Location', data.conversation_url);
     return res.end();
   } catch (e) {
+    // 例外処理
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    return res.end(
-      JSON.stringify({ error: e?.message || String(e) }),
-    );
+    return res.end(JSON.stringify({ error: e?.message || String(e) }));
   }
 };
